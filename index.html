@@ -160,7 +160,8 @@ body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-ser
 .rm-lbl{font-family:'JetBrains Mono',monospace;font-size:6px;fill:rgba(255,255,255,0.55);text-anchor:middle;dominant-baseline:middle;pointer-events:none;user-select:none;}
 .rm-course-lbl{font-family:'JetBrains Mono',monospace;font-size:5.5px;fill:var(--accent);text-anchor:middle;dominant-baseline:middle;pointer-events:none;user-select:none;font-weight:600;}
 .fl-grp{transition:opacity 0.25s;}
-.fl-grp.off{opacity:0;pointer-events:none;}
+.fl-grp.off{opacity:0!important;pointer-events:none;}
+.fl-grp.labels-hidden{opacity:0;pointer-events:none;}
 
 .fp-status{padding:6px 16px;background:var(--card);border-top:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-shrink:0;}
 .fp-si{font-family:'JetBrains Mono',monospace;font-size:0.59rem;color:var(--text3);display:flex;align-items:center;gap:4px;}
@@ -590,19 +591,24 @@ function toggleFilter(){
 
 function toggleLabels(){
   showLabels=!showLabels;
-  // Only toggle the active floor's labels — inactive floors stay hidden via .off class
-  document.getElementById('l'+curFloor).style.opacity=showLabels?'1':'0';
+  // Only touch the ACTIVE floor's label group using a CSS class — never inline style
+  const lbl=document.getElementById('l'+curFloor);
+  if(showLabels) lbl.classList.remove('labels-hidden');
+  else lbl.classList.add('labels-hidden');
 }
 
 function switchFloor(n){
   curFloor=n;
   ['2','3','4'].forEach(x=>{
-    document.getElementById('g'+x).classList.toggle('off',parseInt(x)!==n);
-    document.getElementById('l'+x).classList.toggle('off',parseInt(x)!==n);
-    document.getElementById('fc'+x).classList.toggle('active',parseInt(x)===n);
+    const isActive=parseInt(x)===n;
+    document.getElementById('g'+x).classList.toggle('off',!isActive);
+    document.getElementById('l'+x).classList.toggle('off',!isActive);
+    document.getElementById('fc'+x).classList.toggle('active',isActive);
   });
-  // Respect the current labels toggle state for the newly active floor
-  document.getElementById('l'+n).style.opacity=showLabels?'1':'0';
+  // Apply labels-hidden to newly active floor if labels are currently off
+  const activeLbl=document.getElementById('l'+n);
+  if(showLabels) activeLbl.classList.remove('labels-hidden');
+  else activeLbl.classList.add('labels-hidden');
   const cfg=FLOOR_CONFIG[n];
   document.getElementById('fp_label').textContent=cfg.label;
   document.getElementById('fp_count').textContent=cfg.count+' rooms';
